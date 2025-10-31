@@ -1,22 +1,32 @@
+# https://yamlchecker.com/
 services:
-  user:
-    build: .
-    ports:
-      - "8080:8080"
+  mongodb-service:
+    image: mongo:latest
+    container_name: mongodb
     volumes:
-      - .:/app
-    depends_on:
-      - mongo
-    environment:
-      - NODE_ENV=development
-
-  mongo:
-    image: mongo:6
-    restart: always
+      - mongodb_data:/data/db
     ports:
       - "27017:27017"
+    networks:
+      - userapi-net
+
+  nodeapi-service:
+    image: node:alpine
+    container_name: userapi
     volumes:
-      - mongo-data:/data/db
+    - .:/app
+    - /app/node_modules
+    working_dir: /app
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mongodb-service
+    networks:
+      - userapi-net
+    command: sh -c "npm install && node index.js"
+
+networks:
+  userapi-net:
 
 volumes:
-  mongo-data:
+  mongodb_data:
